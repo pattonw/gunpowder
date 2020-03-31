@@ -159,6 +159,7 @@ class BatchProvider(object):
         request._update_random_seed()
 
         self.set_seeds(request)
+        self.__update_request_metadata(request)
 
         self.check_request_consistency(request)
 
@@ -297,6 +298,12 @@ class BatchProvider(object):
 
     def enable_placeholders(self):
         self._remove_placeholders = False
+        
+    def __update_request_metadata(self, request):
+        for key, spec in request.array_specs.items():
+            provided_spec = self.spec[key]
+            spec.voxel_size = provided_spec.voxel_size
+            spec.dtype = provided_spec.dtype
 
     def provide(self, request):
         '''To be implemented in subclasses.
