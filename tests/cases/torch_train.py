@@ -125,6 +125,13 @@ class TestTorchTrain(ProviderTest):
             loss_inputs={0: ArrayKeys.C_PREDICTED, 1: ArrayKeys.C},
             outputs={0: ArrayKeys.C_PREDICTED},
             gradients={0: ArrayKeys.C_GRADIENT},
+            reference={
+                ArrayKeys.A: ArraySpec(roi=Roi((0, 0), (2, 2))),
+                ArrayKeys.B: ArraySpec(roi=Roi((0, 0), (2, 2))),
+                ArrayKeys.C: ArraySpec(nonspatial=True),
+                ArrayKeys.C_PREDICTED: ArraySpec(nonspatial=True),
+                ArrayKeys.C_GRADIENT: ArraySpec(nonspatial=True),
+            },
             array_specs={
                 ArrayKeys.C_PREDICTED: ArraySpec(nonspatial=True),
                 ArrayKeys.C_GRADIENT: ArraySpec(nonspatial=True),
@@ -135,15 +142,7 @@ class TestTorchTrain(ProviderTest):
         )
         pipeline = source + train
 
-        request = BatchRequest(
-            {
-                ArrayKeys.A: ArraySpec(roi=Roi((0, 0), (2, 2))),
-                ArrayKeys.B: ArraySpec(roi=Roi((0, 0), (2, 2))),
-                ArrayKeys.C: ArraySpec(nonspatial=True),
-                ArrayKeys.C_PREDICTED: ArraySpec(nonspatial=True),
-                ArrayKeys.C_GRADIENT: ArraySpec(nonspatial=True),
-            }
-        )
+        request = BatchRequest({ArrayKeys.C_PREDICTED: ArraySpec(nonspatial=True)})
 
         # train for a couple of iterations
         with build(pipeline):
@@ -156,6 +155,8 @@ class TestTorchTrain(ProviderTest):
                 loss2 = batch.loss
                 self.assertLess(loss2, loss1)
 
+                assert ArrayKeys.C_PREDICTED in batch
+
         # resume training
         with build(pipeline):
 
@@ -164,6 +165,8 @@ class TestTorchTrain(ProviderTest):
                 batch = pipeline.request_batch(request)
                 loss2 = batch.loss
                 self.assertLess(loss2, loss1)
+
+                assert ArrayKeys.C_PREDICTED in batch
 
 
 @skipIf(isinstance(torch, NoSuchModule), "torch is not installed")

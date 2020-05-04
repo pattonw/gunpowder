@@ -109,15 +109,21 @@ class TestTensorflowTrain(ProviderTest):
             inputs={a: ArrayKeys.A, b: ArrayKeys.B},
             outputs={c: ArrayKeys.C},
             gradients={a: ArrayKeys.GRADIENT_A},
-            save_every=100)
+            reference={
+                ArrayKeys.A: ArraySpec(roi=Roi((0, 0), (2, 2))),
+                ArrayKeys.B: ArraySpec(roi=Roi((0, 0), (2, 2))),
+                ArrayKeys.C: ArraySpec(roi=Roi((0, 0), (2, 2))),
+                ArrayKeys.GRADIENT_A: ArraySpec(roi=Roi((0, 0), (2, 2))),
+            },
+            save_every=100,
+        )
         pipeline = source + train
 
-        request = BatchRequest({
-            ArrayKeys.A: ArraySpec(roi=Roi((0, 0), (2, 2))),
-            ArrayKeys.B: ArraySpec(roi=Roi((0, 0), (2, 2))),
-            ArrayKeys.C: ArraySpec(roi=Roi((0, 0), (2, 2))),
-            ArrayKeys.GRADIENT_A: ArraySpec(roi=Roi((0, 0), (2, 2))),
-        })
+        request = BatchRequest(
+            {
+                ArrayKeys.GRADIENT_A: ArraySpec(roi=Roi((0, 0), (2, 2))),
+            }
+        )
 
         # train for a couple of iterations
         with build(pipeline):
