@@ -84,6 +84,7 @@ class Train(GenericTrain):
         inputs: Dict[str, ArrayKey],
         outputs: Dict[Union[int, str], ArrayKey],
         loss_inputs: Dict[Union[int, str], ArrayKey],
+        reference: Dict[ArrayKey, ArraySpec],
         gradients: Dict[Union[int, str], ArrayKey] = {},
         array_specs: Optional[Dict[ArrayKey, ArraySpec]] = None,
         checkpoint_basename: str = "model",
@@ -106,7 +107,7 @@ class Train(GenericTrain):
         )
 
         super(Train, self).__init__(
-            inputs, outputs, gradients, array_specs, spawn_subprocess=spawn_subprocess
+            inputs, outputs, gradients, reference, array_specs, spawn_subprocess=spawn_subprocess
         )
 
         self.model = model
@@ -278,9 +279,7 @@ class Train(GenericTrain):
                 )
             spec = self.spec[array_key].copy()
             spec.roi = request[array_key].roi
-            batch.arrays[array_key] = Array(
-                tensor.grad.cpu().detach().numpy(), spec
-            )
+            batch.arrays[array_key] = Array(tensor.grad.cpu().detach().numpy(), spec)
 
         for array_key, array_name in requested_outputs.items():
             spec = self.spec[array_key].copy()
