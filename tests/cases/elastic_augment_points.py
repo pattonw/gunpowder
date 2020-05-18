@@ -1,5 +1,3 @@
-
-import unittest
 from gunpowder import (
     BatchProvider,
     Batch,
@@ -16,7 +14,7 @@ from gunpowder import (
     Roi,
     Coordinate,
     ElasticAugment,
-    RasterizePoints,
+    RasterizeGraph,
     RasterizationSettings,
     Snapshot,
     build,
@@ -233,7 +231,7 @@ class TestElasticAugment(ProviderTest):
                 [0, 2.0*math.pi]) + # rotate randomly
                 # [math.pi/4, math.pi/4]) + # rotate by 45 deg
                 # [0, 0]) + # no rotation
-            RasterizePoints(
+            RasterizeGraph(
                 test_points,
                 test_raster,
                 settings=RasterizationSettings(
