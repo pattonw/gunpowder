@@ -60,6 +60,14 @@ class Snapshot(BatchFilter):
         store_value_range (``bool``):
 
             If set to ``True``, store range of values in data set attributes.
+
+        node_attrs (``dict``, :class:`GraphKey` -> str):
+
+            the name of node attributes to store in addition to "location".
+
+        edge_attrs (``dict``, :class:`GraphKey` -> str):
+
+            The name of edge attributes to store for each edge.
         """
 
     def __init__(
@@ -72,6 +80,8 @@ class Snapshot(BatchFilter):
         compression_type=None,
         dataset_dtypes=None,
         store_value_range=False,
+        node_attrs=None,
+        edge_attrs=None,
     ):
         self.dataset_names = dataset_names
         self.output_dir = output_dir
@@ -83,6 +93,14 @@ class Snapshot(BatchFilter):
         self.n = 0
         self.compression_type = compression_type
         self.store_value_range = store_value_range
+        if node_attrs is not None:
+            self.node_attrs = node_attrs
+        else:
+            self.node_attrs = {}
+        if edge_attrs is not None:
+            self.edge_attrs = edge_attrs
+        else:
+            self.edge_attrs = {}
         if dataset_dtypes is None:
             self.dataset_dtypes = {}
         else:
@@ -179,12 +197,24 @@ class Snapshot(BatchFilter):
 
                     node_ids = []
                     locations = []
+                    node_attrs = {}
                     edges = []
+                    edge_attrs = {}
+                    for attr in self.node_attrs.get(graph_key, []):
+                        node_attrs[attr] = []
+                    for attr in self.edge_attrs.get(graph_key, []):
+                        edge_attrs[attr] = []
                     for node in graph.nodes:
                         node_ids.append(node.id)
                         locations.append(node.location)
+                        for key in node_attrs.keys():
+                            node_attrs[key].append(node.all[key])
                     for edge in graph.edges:
                         edges.append((edge.u, edge.v))
+                        for key in edge_attrs.keys():
+                            edge_attrs[key].append(edge.all[key])
+
+                    print(f"Snapshot node saving {graph_key} with {len(locations)} locations and {len(node_ids)} nodes")
 
                     f.create_dataset(
                         name=f"{ds_name}-ids",
@@ -201,6 +231,18 @@ class Snapshot(BatchFilter):
                         data=np.array(edges),
                         compression=self.compression_type,
                     )
+                    for key, values in node_attrs.items():
+                        f.create_dataset(
+                            name=f"{ds_name}/node_attrs/{key}",
+                            data=np.array(values),
+                            compression=self.compression_type,
+                        )
+                    for key, values in edge_attrs.items():
+                        f.create_dataset(
+                            name=f"{ds_name}/edge_attrs/{key}",
+                            data=np.array(values),
+                            compression=self.compression_type,
+                        )
 
                 if batch.loss is not None:
                     f["/"].attrs["loss"] = batch.loss
