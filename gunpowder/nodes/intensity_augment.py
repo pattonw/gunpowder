@@ -53,7 +53,7 @@ class IntensityAugment(BatchFilter):
 
         assert not self.z_section_wise or raw.spec.roi.dims() == 3, "If you specify 'z_section_wise', I expect 3D data."
         assert raw.data.dtype == np.float32 or raw.data.dtype == np.float64, "Intensity augmentation requires float types for the raw array (not " + str(raw.data.dtype) + "). Consider using Normalize before."
-        assert raw.data.min() >= 0 and raw.data.max() <= 1, "Intensity augmentation expects raw values in [0,1]. Consider using Normalize before."
+        assert raw.data.min() >= 0 and raw.data.max() <= 1, f"Intensity augmentation expects raw values in [0,1]. Consider using Normalize before. provided range is {raw.data.min()}, {raw.data.max()}"
 
         if self.z_section_wise:
             for z in range((raw.spec.roi/self.spec[self.array].voxel_size).get_shape()[0]):

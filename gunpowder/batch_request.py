@@ -42,7 +42,7 @@ class BatchRequest(ProviderSpec):
         elif isinstance(key, GraphKey):
             spec = GraphSpec()
         else:
-            raise RuntimeError("Only ArrayKey or GraphKey can be added.")
+            raise RuntimeError(f"Only ArrayKey or GraphKey can be added, not {type(key)}")
 
         spec.roi = Roi((0,)*len(shape), shape)
 
