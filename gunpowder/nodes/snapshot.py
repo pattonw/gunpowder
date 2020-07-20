@@ -69,6 +69,12 @@ class Snapshot(BatchFilter):
         edge_attrs (``dict``, :class:`GraphKey` -> list str):
 
             The name of edge attributes to store for each edge.
+
+        mode (``str``):
+
+            The mode with which to open the snapshot file. Default "w" since
+            it is assumed you are making a new snapshot file, but this can
+            be overwritten if you wish to modify a snapshot file.
         """
 
     def __init__(
@@ -83,6 +89,7 @@ class Snapshot(BatchFilter):
         store_value_range=False,
         node_attrs=None,
         edge_attrs=None,
+        mode="w"
     ):
         self.dataset_names = dataset_names
         self.output_dir = output_dir
@@ -106,6 +113,8 @@ class Snapshot(BatchFilter):
             self.dataset_dtypes = {}
         else:
             self.dataset_dtypes = dataset_dtypes
+
+        self.mode = mode
 
     def setup(self):
 
