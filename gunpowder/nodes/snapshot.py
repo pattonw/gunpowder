@@ -6,6 +6,7 @@ import copy
 from .batch_filter import BatchFilter
 from gunpowder.batch_request import BatchRequest
 from gunpowder.ext import h5py
+from gunpowder.ext import ZarrFile
 
 logger = logging.getLogger(__name__)
 
@@ -61,13 +62,19 @@ class Snapshot(BatchFilter):
 
             If set to ``True``, store range of values in data set attributes.
 
-        node_attrs (``dict``, :class:`GraphKey` -> str):
+        node_attrs (``dict``, :class:`GraphKey` -> list str):
 
             the name of node attributes to store in addition to "location".
 
-        edge_attrs (``dict``, :class:`GraphKey` -> str):
+        edge_attrs (``dict``, :class:`GraphKey` -> list str):
 
             The name of edge attributes to store for each edge.
+
+        mode (``str``):
+
+            The mode with which to open the snapshot file. Default "w" since
+            it is assumed you are making a new snapshot file, but this can
+            be overwritten if you wish to modify a snapshot file.
         """
 
     def __init__(
@@ -82,6 +89,7 @@ class Snapshot(BatchFilter):
         store_value_range=False,
         node_attrs=None,
         edge_attrs=None,
+        mode="w"
     ):
         self.dataset_names = dataset_names
         self.output_dir = output_dir
@@ -105,6 +113,8 @@ class Snapshot(BatchFilter):
             self.dataset_dtypes = {}
         else:
             self.dataset_dtypes = dataset_dtypes
+
+        self.mode = mode
 
     def setup(self):
 
@@ -150,8 +160,12 @@ class Snapshot(BatchFilter):
                 ),
             )
             logger.info("saving to %s" % snapshot_name)
-            with h5py.File(snapshot_name, "w") as f:
+            if snapshot_name.endswith(".hdf"):
+                open_func = h5py.File
+            elif snapshot_name.endswith(".zarr"):
+                open_func = ZarrFile
 
+            with open_func(snapshot_name, self.mode) as f:
                 for (array_key, array) in batch.arrays.items():
 
                     if array_key not in self.dataset_names:
@@ -214,7 +228,11 @@ class Snapshot(BatchFilter):
                         for key in edge_attrs.keys():
                             edge_attrs[key].append(edge.all[key])
 
-                    print(f"Snapshot node saving {graph_key} with {len(locations)} locations and {len(node_ids)} nodes")
+                    logger.debug(
+                        f"Saving graph {graph_key} with {graph.num_vertices()} nodes, "
+                        f"{graph.num_edges()} edges and "
+                        f"{len(list(graph.connected_components))} connected components"
+                    )
 
                     f.create_dataset(
                         name=f"{ds_name}-ids",
