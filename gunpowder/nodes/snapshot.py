@@ -89,7 +89,7 @@ class Snapshot(BatchFilter):
         store_value_range=False,
         node_attrs=None,
         edge_attrs=None,
-        mode="w"
+        mode="w",
     ):
         self.dataset_names = dataset_names
         self.output_dir = output_dir
@@ -164,6 +164,9 @@ class Snapshot(BatchFilter):
                 open_func = h5py.File
             elif snapshot_name.endswith(".zarr"):
                 open_func = ZarrFile
+            else:
+                logger.warning("ambiguous file type")
+                open_func = h5py.File
 
             with open_func(snapshot_name, self.mode) as f:
                 for (array_key, array) in batch.arrays.items():
