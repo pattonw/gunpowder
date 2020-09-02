@@ -62,10 +62,9 @@ class Crop(BatchFilter):
 
         if self.roi is not None:
 
-            assert spec.roi.contains(self.roi), (
-                "Crop ROI is not contained in upstream ROI.")
-
-            cropped_roi = self.roi
+            cropped_roi = spec.roi.intersect(self.roi)
+            assert not cropped_roi.empty(), (
+                "Intersection of provided roi and crop roi empty!")
 
         else:
 
